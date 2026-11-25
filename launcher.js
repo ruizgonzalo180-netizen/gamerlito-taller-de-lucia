@@ -50,7 +50,7 @@
   const maskInput=input=>input.classList.toggle('lx-hidden-input',namePattern().test(input.value));
   const hiddenCreator='<span class="lx-hidden-name" aria-hidden="true">Game creator</span>';
   const games = [
-    {id:'gta',name:'Euroform Automotive',aliases:['gta','gta6','gta 6','gta vi','gtavi','grand theft auto 6'],img:'launcher/shop-tile.jpg',hero:'launcher/shop-hero.jpg',rating:100},
+    {id:'gta',name:'Grand Theft Auto VI',aliases:['gta','gta6','gta 6','gta vi','gtavi','grand theft auto 6'],img:'launcher/992d18231337c844.webp',hero:'launcher/87a89308fbccb2b3.webp',rating:100},
     {id:'egg',name:'Steal An Egg',img:'launcher/c0b1b2b1c83dbb5e.webp',rating:91},
     {id:'mm2',name:'Murder Mystery 2',img:'launcher/12b244e5d98bbd3f.webp',rating:90},
     {id:'hospital',name:'Animal Hospital (Anomaly)',img:'launcher/58b29309838ee324.webp',hero:'launcher/42a7400b6c02f3dc.webp',rating:92},
@@ -61,6 +61,7 @@
     {id:'roworld',name:'RoWorld [World PvP]',img:'launcher/fc05b3f1c2dd65cb.webp',rating:83},
     {id:'pool',name:'[ABILITIES] CRAZY 8 Ball',img:'launcher/d721fdedb3d2dd64.webp',rating:98}
   ];
+  ['Throw Food For Animals','Collect Every Coin','Brookhaven RP','Barber Showdown','Summon a Pet'].forEach((name,i)=>games.push({id:'ref'+i,name,img:'entry/pick-'+i+'.jpg',rating:[94,55,86,84,83][i]}));
   const getGame = id => games.find(g=>g.id===id) || games[0];
   const people = [
     {name:'rafa2026rblox',img:'launcher/930d1dc3d96dd3b2.webp'},{name:'MoxZ',img:'launcher/9b65cde048bbad91.webp'},
@@ -75,7 +76,7 @@
   const data={...defaults,...saved};
   for (const key of ['favorites','likes','alerts','friends','messages']) if (!Array.isArray(data[key])) data[key]=[];
   const persist=()=>{try{localStorage.setItem(`gamerlito-${document.body.dataset.duoMode}-lucia-jason-launcher-v1`,JSON.stringify(data));}catch{}};
-  let page='details', selection='gta', detailOrigin='home', modal='', selectedPerson=0, homeScroll=0, timer;
+  let page='home', selection='gta', detailOrigin='home', modal='', selectedPerson=0, homeScroll=0, timer;
   const localGame = () => getGame(selection);
   function notify(message) {
     clearTimeout(timer);toast.textContent=message;toast.classList.add('lx-visible');
@@ -112,7 +113,7 @@
     return '<section class="lx-section lx-discover"><h2>Discover Avatars</h2><div class="lx-cards lx-squares">'+cards.join('')+'</div></section>';
   }
   function home(){
-    return tabs()+portraits()+section('Recommended For You',[5,6,7,8,9,3].map(i=>games[i]),false)+
+    return tabs()+portraits()+section('Recommended For You',games.slice(10,15),false)+
       section('Continue',games.slice(0,5),true,'continue')+discoverAvatars();
   }
   function detail(){
@@ -121,7 +122,7 @@
     return '<div class="lx-detail-nav">'+button('back','', 'close','lx-back','aria-label="Back to library"')+button('navigation','','menu','lx-nav-toggle','aria-label="Navigation menu" aria-haspopup="dialog" aria-controls="lx-dialog"')+'</div><article class="lx-detail-inner"><div class="lx-detail-head"><img class="lx-detail-tile" src="'+g.img+'" alt=""><div class="lx-detail-meta"><h1>'+visibleText(g.name)+'</h1>'+
       '<div class="lx-age">'+(play?'Maturity: Content May Vary · Ages 16+':'Experience preview')+'</div>'+
       (play?button('creator',hiddenCreator,null,'lx-creator','aria-label="Open creator profile"'):'')+
-      '<div class="lx-play-row">'+(play?button('play','', 'play','lx-play','aria-label="Enter Euroform Automotive" title="Play"'):button('art','View artwork',null,'lx-play'))+
+      '<div class="lx-play-row">'+(play?button('play','', 'play','lx-play','aria-label="Play Grand Theft Auto VI" title="Play"'):button('art','View artwork',null,'lx-play'))+
       button('favorite','','star','lx-square-button','aria-label="'+(favorite?'Remove from favorites':'Add to favorites')+'" aria-pressed="'+favorite+'"')+
       button('detail-more','','more','lx-square-button','aria-label="More options"')+'</div></div></div>'+
       '<div class="lx-chips">'+ctl('like',g.rating+'%','like',like)+(play?button('server','Local server','people',''):'')+
@@ -174,7 +175,7 @@
   function details(id){
     detailOrigin=page;selection=id;setPage('details');
     if(id!=='gta')return;
-    
+    window.JoinScreen.prepare();
     const article=content.querySelector('.lx-detail-inner');
     for(const [state,frames] of [['cover',13],['meta',19],['hero',35]]){
       const phase='lx-'+state+'-pending';

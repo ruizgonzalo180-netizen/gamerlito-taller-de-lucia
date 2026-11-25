@@ -1,0 +1,38 @@
+#game-hud .duo-transport {
+  position:absolute; top:max(1.65%,env(safe-area-inset-top)); right:max(1.45%,env(safe-area-inset-right));
+  display:flex; align-items:center; border-radius:999px; background:rgba(16,17,19,.74);
+  pointer-events:auto;
+}
+#game-hud .duo-transport .gh-tool { pointer-events:auto; color:#f4f5f5; background:transparent; }
+#game-hud .duo-transport svg { width:48%; height:48%; fill:currentColor; pointer-events:none; }
+#game-hud .duo-transport .duo-play,
+#game-hud .duo-transport [data-paused="true"] .duo-pause,
+#game-hud[data-stage="launch"] .duo-transport,
+#game-hud .duo-action-hint { display:none; }
+#game-hud .duo-transport [data-paused="true"] .duo-play { display:block; }
+#game-hud[data-duo-mode="auto"] :is(.gh-scene-action,.gh-jump,.gh-sprint) {
+  transform-origin:center;
+  transition:transform 85ms cubic-bezier(.2,.75,.35,1.18), background-color 55ms linear;
+}
+#game-hud[data-duo-mode="auto"] .gh-stick span { transition:transform 90ms ease-out; }
+#game-hud[data-duo-mode="auto"] .gh-stick:active span { transition:none; }
+#game-hud[data-duo-mode="auto"] [data-demo-held="true"] {
+  transform:translateY(2px) scale(.91); transition-duration:45ms;
+  background-color:rgba(240,242,239,.76); color:#16181b; box-shadow:0 0 0 2px rgba(255,255,255,.75);
+}
+#game-hud .gh-jump[data-demo-held="true"] span { background:#1b1d20; }
+#game-hud .gh-scene-action[data-demo-held="true"] .duo-action-hint { display:inline; }
+#game-hud .gh-scene-action[data-demo-held="true"] span { display:none; }
+#game-hud[data-demo-action="fire"] [data-gh="act"][data-demo-held="true"] {
+  transform:translateY(5px) scale(.78); transition-duration:22ms;
+  background:#f6e0ad; outline:2px solid #fff1cb; outline-offset:2px;
+}
+@media(prefers-reduced-motion:reduce) {
+  #game-hud[data-duo-mode="auto"] :is(.gh-scene-action,.gh-jump,.gh-sprint,.gh-stick span) { transition:none; }
+}
+#game-surface #credit-privacy { position:absolute; inset:auto; pointer-events:none; background:#0b1013; }
+@supports ((backdrop-filter:blur(3px)) or (-webkit-backdrop-filter:blur(3px))) {
+  #game-surface #credit-privacy {
+    background:rgba(6,10,12,.2); -webkit-backdrop-filter:blur(var(--credit-blur)); backdrop-filter:blur(var(--credit-blur));
+  }
+}
