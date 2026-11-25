@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121419"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Euroform Automotive · Gamerlito</title><link rel="manifest" href="app.webmanifest"><link rel="apple-touch-icon" href="gamerlito-192.png"><link rel="stylesheet" href="lobby.css"><link rel="stylesheet" href="workshop.css"></head>
+<body data-duo-mode="taller">
+<main id="launcher" aria-label="Roblox experience launcher">
+  <aside class="lx-rail" aria-label="Navigation">
+    <button type="button" data-lx="home" data-nav="home"><i data-ico="home"></i><span>Home</span></button>
+    <button type="button" data-lx="moments" data-nav="moments"><i data-ico="moments"></i><span>Moments</span></button>
+    <button type="button" data-lx="chat" data-nav="chat"><i data-ico="chat"></i><span>Chat</span></button>
+    <button type="button" data-lx="me" data-nav="me"><img src="launcher/e7dbdb877544afa0.webp" alt=""><span>Me</span></button>
+    <button type="button" data-lx="more"><i data-ico="more"></i><span>More</span></button>
+  </aside>
+  <div class="lx-shell">
+    <header class="lx-header">
+      <button type="button" class="lx-nav-toggle" data-lx="navigation" aria-label="Navigation menu" aria-haspopup="dialog" aria-controls="lx-dialog"><i data-ico="menu"></i></button>
+      <button type="button" class="lx-brand" data-lx="home" aria-label="Roblox home"><img src="launcher/desktop-wordmark.png" alt="Roblox"></button>
+      <form class="lx-search" role="search" id="lx-search-form"><i data-ico="search"></i><input id="lx-query" aria-label="Search experiences" placeholder="Search" autocomplete="off" type="search"></form>
+      <div class="lx-header-tools"><button type="button" data-lx="fullscreen" aria-label="Full screen" title="Full screen"><i data-ico="expand"></i></button><button type="button" data-lx="favorites" aria-label="Favorites" title="Favorites"><i data-ico="star"></i></button><button type="button" data-lx="notices" aria-label="Notifications" title="Notifications"><i data-ico="bell"></i></button></div>
+    </header>
+    <div id="lx-content" class="lx-scroll"></div>
+  </div>
+  <dialog class="lx-dialog" id="lx-dialog" aria-labelledby="lx-dialog-title">
+    <div class="lx-dialog-head"><h2 id="lx-dialog-title"></h2><button type="button" data-lx="close" aria-label="Close"><i data-ico="close"></i></button></div>
+    <div id="lx-dialog-body"></div>
+  </dialog>
+  <div class="lx-toast" id="lx-toast" role="status" aria-live="polite"></div>
+</main>
+<main id="shop" hidden aria-label="Euroform Automotive workshop">
+ <div id="scene"><img id="still" src="launcher/shop-hero.jpg" alt="Lucia's Thrax inside the workshop"><canvas id="finish" hidden></canvas><video id="live" playsinline muted preload="metadata" hidden></video><video id="road" preload="auto" playsinline muted disablepictureinpicture hidden></video><div id="privacy"></div></div>
+ <div class="head"><button id="menu" class="roblox" aria-label="Open experience menu"><i></i></button><div id="brand"><small>TRUFFADE / LUCIA'S THRAX</small><strong>EUROFORM AUTOMOTIVE</strong></div><div id="funds" aria-label="Garage balance"></div></div>
+ <section id="mission" aria-label="Lucia and Jason" hidden><iframe title="Lucia and Jason gameplay" allow="autoplay; fullscreen" allowfullscreen></iframe><button id="exitMission">‹ Workshop</button></section><div id="bench"><nav id="groups" aria-label="Workshop departments"></nav><div id="parts" aria-label="Parts"></div></div>
+ <section id="picker" hidden aria-label="Part preview"><button id="up">‹ &nbsp; Workshop</button><span id="partName"></span>
+  <div class="choice"><button id="prev" aria-label="Previous option">‹</button><div><small id="count"></small><h1 id="name"></h1></div><button id="next" aria-label="Next option">›</button></div>
+  <div id="rail" aria-label="Options"></div><div class="controls"><button id="apply" class="primary">Equip</button><button id="motion">Watch category</button></div>
+ </section>
+ <div id="footer"><button id="build">My build</button><button id="drive">Test drive &nbsp; ›</button></div>
+ <section id="playerBar" hidden><button id="pause" aria-label="Pause or resume video">Pause</button><input id="seek" type="range" min="0" max="1168" step="0.1" aria-label="Video position"><output id="clock"></output><button id="returnShop" class="primary">Enter workshop</button></section>
+ <button id="skip" hidden>Skip intro &nbsp; ›</button><div id="notice" role="status" hidden></div>
+ <dialog id="panel"><div id="dialoghead"><div><small>EUROFORM AUTOMOTIVE</small><h2 id="heading"></h2></div><button id="close" aria-label="Close">×</button></div><div id="panelbody"></div></dialog>
+</main>
+<script src="launcher.js"></script><script src="workshop.js" type="module"></script></body></html>
