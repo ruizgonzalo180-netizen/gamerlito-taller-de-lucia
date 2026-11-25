@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121419"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Euroform Automotive · Gamerlito</title><link rel="manifest" href="app.webmanifest"><link rel="apple-touch-icon" href="gamerlito-192.png"><link rel="stylesheet" href="lobby.css"><link rel="stylesheet" href="workshop.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121419"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Euroform Automotive · Gamerlito</title><link rel="manifest" href="app.webmanifest"><link rel="apple-touch-icon" href="gamerlito-192.png"><link rel="stylesheet" href="lobby.css"><link rel="stylesheet" href="workshop.css?v=thrax2"></head>
 <body data-duo-mode="taller">
 <main id="launcher" aria-label="Roblox experience launcher">
   <aside class="lx-rail" aria-label="Navigation">
@@ -30,11 +30,13 @@
  <section id="mission" aria-label="Lucia and Jason" hidden><iframe title="Lucia and Jason gameplay" allow="autoplay; fullscreen" allowfullscreen></iframe><button id="exitMission">‹ Workshop</button></section><div id="bench"><nav id="groups" aria-label="Workshop departments"></nav><div id="parts" aria-label="Parts"></div></div>
  <section id="picker" hidden aria-label="Part preview"><button id="up">‹ &nbsp; Workshop</button><span id="partName"></span>
   <div class="choice"><button id="prev" aria-label="Previous option">‹</button><div><small id="count"></small><h1 id="name"></h1></div><button id="next" aria-label="Next option">›</button></div>
-  <div id="rail" aria-label="Options"></div><div class="controls"><button id="apply" class="primary">Equip</button><button id="motion">Watch category</button></div>
+  <div id="rail" aria-label="Options"></div><div id="rimTools" hidden><label for="rimSize">Rim size</label><input id="rimSize" type="range" min="1" max="22" value="7" step="1"><output id="rimValue">7</output></div>
+ <div id="paintTools" hidden><button id="customPaint">Custom paint</button><label id="colorLabel" hidden><input type="color" id="pigment" aria-label="Body paint color" value="#2675bb"><select id="sheen" aria-label="Paint finish"><option value="gloss">Smooth gloss</option><option value="matte">Solid matte</option></select></label></div>
+ <div class="controls"><button id="apply" class="primary">Equip</button><button id="motion">Watch category</button></div>
  </section>
- <div id="footer"><button id="build">My build</button><button id="drive">Test drive &nbsp; ›</button></div>
- <section id="playerBar" hidden><button id="pause" aria-label="Pause or resume video">Pause</button><input id="seek" type="range" min="0" max="1168" step="0.1" aria-label="Video position"><output id="clock"></output><button id="returnShop" class="primary">Enter workshop</button></section>
+ <div id="footer"><button id="angle" hidden>Next detail</button><button id="build">My build</button><button id="drive">Test drive &nbsp; ›</button></div>
+ <div id="pedals" hidden><button data-pedal="brake" title="Hold S to brake">Brake</button><button data-pedal="gas" title="Hold W to accelerate">Gas</button><button data-pedal="boost" title="Hold Shift for nitrous">Nitrous</button></div><section id="playerBar" hidden><button id="pause" aria-label="Pause or resume video">Pause</button><input id="seek" type="range" min="0" max="1168" step="0.1" aria-label="Video position"><output id="clock"></output><button id="returnShop" class="primary">Enter workshop</button></section>
  <button id="skip" hidden>Skip intro &nbsp; ›</button><div id="notice" role="status" hidden></div>
  <dialog id="panel"><div id="dialoghead"><div><small>EUROFORM AUTOMOTIVE</small><h2 id="heading"></h2></div><button id="close" aria-label="Close">×</button></div><div id="panelbody"></div></dialog>
 </main>
-<script src="launcher.js"></script><script src="workshop.js" type="module"></script></body></html>
+<script src="launcher.js"></script><script src="workshop.js?v=thrax2" type="module"></script></body></html>

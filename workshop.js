@@ -1,5 +1,6 @@
+import {fitExterior} from './exterior.js';
 const $ = id => document.getElementById(id);
-const [catalog, segments] = await Promise.all(['catalog.json','segments.json'].map(url => fetch(url).then(r => r.json())));
+const [catalog, segments] = await Promise.all(['catalog.json?v=thrax2','segments.json?v=thrax2'].map(url => fetch(url).then(r => r.json())));
 const groups = Object.keys(catalog);
 const entries = Object.values(catalog).reduce((all,group)=>Object.assign(all,group),{});
 const images = new Map();
@@ -8,12 +9,15 @@ const funding = 233098, storageKey = 'euroform-thrax-build-v1';
 const release = 'https://github.com/ruizgonzalo180-netizen/gamerlito-taller-de-lucia/releases/download/original-4k/';
 const total = segments.at(-1).start + segments.at(-1).duration;
 let group = groups[0], part = Object.keys(catalog[group])[0], index = 0, mode='lobby';
-let sceneToken=0, mediaToken=0, currentSegment=0, segmentStart=0, transientEnd=null, returnMode='bench', activeQuality='', noticeTimer;
-let state = {cash:funding,equipped:{},owned:{},quality:'auto'};
+let inspectionIndex=0;let testDrive=false;let sceneToken=0, mediaToken=0, currentSegment=0, segmentStart=0, transientEnd=null, returnMode='bench', activeQuality='', noticeTimer;
+let state = {cash:funding,equipped:{},owned:{},quality:'auto',rimSize:7,customPaint:null};
+let draftRim=7,draftPaint=null;
 try {
  const saved=JSON.parse(localStorage.getItem(storageKey));
  if(saved && Number.isFinite(saved.cash) && saved.cash>=0 && saved.cash<=funding){
    state.cash=saved.cash;
+   state.rimSize=Math.min(22,Math.max(1,Math.round(Number(saved.rimSize)||7)));
+   if(/^#[0-9a-f]{6}$/i.test(saved.customPaint?.hex)&&['gloss','matte'].includes(saved.customPaint.finish))state.customPaint=saved.customPaint;
    for(const [part,items] of Object.entries(entries)){
      if(items.some(option=>option.t===saved.equipped?.[part]))state.equipped[part]=saved.equipped[part];
      state.owned[part]=items.filter(opt=>saved.owned?.[part]?.includes(opt.t)).map(opt=>opt.t);
@@ -41,13 +45,13 @@ function img(t){
  return images.get(t);
 }
 function modeIs(value){
- if(value!=='option')clearPreview();mode=value;$('shop').dataset.mode=value;
+ if(value!=='option')clearPreview();if(value!=='video')testDrive=false;$('pedals').hidden=!(testDrive&&value==='video');mode=value;$('shop').dataset.mode=value;
  $('bench').hidden=value!=='bench';$('picker').hidden=value!=='option';
  $('footer').hidden=!['bench','option','inspect'].includes(value);
  $('playerBar').hidden=value!=='video';$('skip').hidden=value!=='intro';
  $('build').textContent=value==='inspect'?'Edit parts':'My build';
  $('brand').hidden=value==='video';$('funds').hidden=['intro','video'].includes(value);
- $('funds').textContent=money(state.cash);
+ $('funds').textContent=money(state.cash);if(value!=='inspect')$('angle').hidden=true;
 }
 function stopVideo(){
  mediaToken++;video.onloadedmetadata=video.onseeked=video.onended=video.onerror=video.ontimeupdate=null;
@@ -62,8 +66,11 @@ async function scene(t,assembled=false){
   const source=await img(t);if(token!==sceneToken)return;
   still.src=source.src;still.hidden=false;canvas.hidden=true;
   // A native photo supplies all body contours and lighting. Only blue paint pixels are tinted.
-  const color=bodyPaint[state.equipped.Respray];
-  if(!assembled&&(!color||part==='Respray'||group==='Interior'||part==='Full Kits'))return;
+  const look=mode==='option'&&part==='Respray'?draftPaint:state.customPaint;
+  const color=look?look.hex.match(/[a-f0-9]{2}/gi).map(c=>parseInt(c,16)):bodyPaint[state.equipped.Respray] || (assembled?({315:[24,137,60],318:[122,55,182],332:[99,174,207]})[state.equipped['Full Kits']]:null);
+  if(mode==='inspect'&&!assembled)return;
+  const resizeRim=mode==='option'&&part==='Rim Style'&&draftRim!==recordedSize(t);
+  if(!assembled&&!resizeRim&&(!color||(part==='Respray'&&!look)||group==='Interior'||part==='Full Kits'))return;
   canvas.width=source.naturalWidth;canvas.height=source.naturalHeight;ctx.drawImage(source,0,0);
   if(color){
    const width=canvas.width,height=canvas.height;
@@ -75,24 +82,35 @@ async function scene(t,assembled=false){
     const red=p[i],green=p[i+1],blue=p[i+2],strength=Math.min(blue-red,1.8*(blue-green));
     if(strength<17||green<red*.88)continue;
     const a=Math.min(1,(strength-17)/35),light=(green*.65+blue*.35)/155;
-    const shine=Math.max(0,red-65)*.75;
+    const shine=Math.max(0,red-65)*(look?.finish==='matte'?.32:.75);
     for(let c=0;c<3;c++)p[i+c]=p[i+c]*(1-a)+a*Math.min(255,color[c]*light+shine);
    }
    ctx.putImageData(area,x,top);
+  }
+  if(resizeRim){
+   const [cx,cy]=rimCenter(t),x=cx*canvas.width,y=cy*canvas.height;
+   const stock=t>=663?.204:.192, change=(draftRim-recordedSize(t))*.007;
+   const base=stock*canvas.height,scaled=base*(1+change);
+   ctx.save();ctx.beginPath();ctx.ellipse(x,y,Math.max(base,scaled)*.86,Math.max(base,scaled),0,0,Math.PI*2);ctx.clip();
+   ctx.fillStyle='#252727';ctx.fillRect(x-base*1.3,y-base*1.3,base*2.6,base*2.6);
+   ctx.beginPath();ctx.ellipse(x,y,scaled*.86,scaled,0,0,Math.PI*2);ctx.clip();
+   ctx.drawImage(source,x-base*.86,y-base,base*1.72,base*2,x-scaled*.86,y-scaled,scaled*1.72,scaled*2);ctx.restore();
   }
   if(assembled){await drawFittings(token);if(token!==sceneToken)return;}
   canvas.hidden=false;
  }catch{if(token===sceneToken)notify('This preview could not load. Select the part to try again.');}
 }
+function recordedSize(t){return t===662?14:t>=663?22:7;}
+function rimCenter(t){return t<=641?[.585,.49]:t>=655&&t<=663?[.549,.50]:[.596,.50];}
 async function drawFittings(token){
  const rim=equipped('Rim Style');
  if(rim){
   const source=await img(rim.t);if(token!==sceneToken)return;
   // The reference has three wheel-camera positions. Coordinates are normalized to the source.
-  const pos=rim.t<=641?[.585,.49]:rim.t>=655&&rim.t<=663?[.549,.50]:[.596,.50];
+  const pos=rimCenter(rim.t);
   const radius=rim.t>=663?.171:.158;
   for(const [cx,cy,rx,ry] of [[.406,.695,.031,.060],[.173,.669,.022,.049]]){
-   const x=cx*canvas.width,y=cy*canvas.height,w=rx*canvas.width,h=ry*canvas.height;
+   const x=cx*canvas.width,y=cy*canvas.height,w=rx*canvas.width*(1+(state.rimSize-7)*.008),h=ry*canvas.height*(1+(state.rimSize-7)*.008);
    ctx.save();ctx.beginPath();ctx.ellipse(x,y,w,h,-.10,0,Math.PI*2);ctx.clip();
    ctx.drawImage(source,source.width*(pos[0]-radius*.5625),source.height*(pos[1]-radius),source.width*radius*1.125,source.height*radius*2,x-w,y-h,w*2,h*2);ctx.restore();
   }
@@ -102,6 +120,7 @@ async function drawFittings(token){
   ctx.save();ctx.scale(canvas.width/720,canvas.height/405);ctx.fillStyle=({522:'#0c1115a6',523:'#060910ea',524:'#e58b2580',526:'#0fcfe77f',527:'#070b12c7'})[tint.t]||'#15181c99';
   ctx.beginPath();ctx.moveTo(172,227);ctx.bezierCurveTo(188,207,220,202,244,213);ctx.lineTo(262,228);ctx.closePath();ctx.fill();ctx.restore();
  }
+ fitExterior(ctx,canvas,equipped);
  const glow={400:'#53ff79',401:'#ffffff',402:'#00e6ff',405:'#2861ff',406:'#ff9024',407:'#ffffff',408:'#ffed18',410:'#2861ff',411:'#ff138c',412:'#ffed18',413:'#9736ff'};
  for(const [name,x,y,w] of [['Underglow · Front',.557,.755,.054],['Underglow · Side',.31,.731,.134],['Underglow · Back',.164,.731,.043]]){
   const color=glow[state.equipped[name]];if(!color)continue;
@@ -124,43 +143,65 @@ function showBench(focusPart=false){
 }
 function choosePart(p){
  stopVideo();group=groups.find(g=>catalog[g][p]);part=p;
- index=Math.max(0,entries[p].findIndex(x=>x.t===state.equipped[p]));modeIs('option');renderOption();
+ index=Math.max(0,entries[p].findIndex(x=>x.t===state.equipped[p]));draftRim=state.equipped[p]?state.rimSize:recordedSize(option().t);draftPaint=p==='Respray'?state.customPaint:null;modeIs('option');renderOption();
 }
 function renderOption(){
- const items=entries[part],it=option(),installed=state.equipped[part]===it.t;
- $('partName').textContent=part;$('name').textContent=it.name;$('count').textContent=group.toUpperCase()+'  /  '+(index+1)+' OF '+items.length;
+ const items=entries[part],it=option(),installed=state.equipped[part]===it.t && (part!=='Rim Style'||state.rimSize===draftRim) && (part!=='Respray'||JSON.stringify(state.customPaint)===JSON.stringify(draftPaint));
+ $('rimTools').hidden=part!=='Rim Style';$('rimSize').value=draftRim;$('rimValue').textContent=draftRim;
+ $('paintTools').hidden=part!=='Respray';$('colorLabel').hidden=!draftPaint;$('customPaint').textContent=draftPaint?'Use recorded paint':'Custom paint';
+ if(draftPaint){$('pigment').value=draftPaint.hex;$('sheen').value=draftPaint.finish;}
+ $('partName').textContent=part;$('name').textContent=part==='Respray'&&draftPaint?'Custom '+draftPaint.finish:it.name;$('count').textContent=group.toUpperCase()+'  /  '+(index+1)+' OF '+items.length;
  $('prev').disabled=$('next').disabled=items.length<2;
  $('apply').textContent=installed?'Equipped':owned(it)?'Equip':'Buy · '+money(it.price);
  $('apply').disabled=installed;$('funds').textContent=money(state.cash);
  $('rail').replaceChildren(...items.map((x,i)=>{
-  const b=button('',()=>{index=i;renderOption();});
+  const b=button('',()=>selectOption(i));
   const thumb=document.createElement('img');thumb.src='swatches/'+x.t+'.jpg';thumb.alt='';thumb.loading='lazy';
   const number=document.createElement('span');number.textContent=String(i+1);b.append(thumb,number);b.title=x.name;b.setAttribute('aria-label',x.name);b.setAttribute('aria-pressed',String(i===index));return b;
  }));
  const active=$('rail').children[index];$('rail').scrollLeft=Math.max(0,active.offsetLeft-$('rail').clientWidth/2);
- scene(it.t);schedulePreview(it.t);img(items[(index+1)%items.length].t).catch(()=>{});
+ const custom=part==='Respray'&&draftPaint;scene(custom?294:it.t);if(custom||part==='Rim Style'&&draftRim!==recordedSize(it.t))clearPreview();else schedulePreview(it.t);img(items[(index+1)%items.length].t).catch(()=>{});
 }
-function move(n){const items=entries[part];index=(index+n+items.length)%items.length;renderOption();}
+function selectOption(i){
+ index=i;if(part==='Respray')draftPaint=state.equipped[part]===option().t?state.customPaint:null;
+ if(part==='Rim Style')draftRim=state.equipped[part]===option().t?state.rimSize:recordedSize(option().t);renderOption();
+}
+function move(n){const items=entries[part];selectOption((index+n+items.length)%items.length);}
+$('rimSize').oninput=e=>{draftRim=Number(e.target.value);renderOption();};
+$('customPaint').onclick=()=>{draftPaint=draftPaint?null:{hex:$('pigment').value,finish:$('sheen').value};renderOption();};
+$('pigment').oninput=$('sheen').onchange=()=>{draftPaint={hex:$('pigment').value,finish:$('sheen').value};renderOption();};
 function install(){
- const it=option();if(state.equipped[part]===it.t)return;
+ const it=option();if($('apply').disabled)return;
  if(!owned(it)){if(it.price>state.cash){notify('Insufficient garage funds');return;}state.cash-=it.price;(state.owned[part]??=[]).push(it.t);}
- state.equipped[part]=it.t;renderOption();if(save())notify(it.name+' equipped');
+ if(part==='Rim Style')state.rimSize=draftRim;if(part==='Respray')state.customPaint=draftPaint;state.equipped[part]=it.t;renderOption();if(save())notify(it.name+' equipped');
 }
 function modal(title,children){
  $('heading').textContent=title;$('panelbody').replaceChildren(...children);
  if(!$('panel').open)$('panel').showModal();
 }
 function dismiss(){if($('panel').open)$('panel').close();}
-function inspect(){dismiss();stopVideo();modeIs('inspect');scene(294,true);}
+function inspect(){
+ dismiss();stopVideo();modeIs('inspect');inspectionIndex=0;
+ if(equipped('Full Kits')&&Object.keys(state.equipped).length===1)inspectionIndex=1;
+ inspection();
+}
+function inspection(){
+ const parts=Object.keys(entries).filter(p=>equipped(p));
+ $('angle').hidden=!parts.length;const p=parts[inspectionIndex-1];
+ if(!p){scene(294,true);$('angle').textContent='Inspect parts ›';return;}
+ $('angle').textContent=inspectionIndex===parts.length?'Exterior ›':'Next detail ›';
+ const it=equipped(p);scene(it.t);notify(p+' · '+it.name);
+}
+$('angle').onclick=()=>{inspectionIndex=(inspectionIndex+1)%(1+Object.keys(state.equipped).length);inspection();};
 function myBuild(){
  const rows=[button('Inspect exterior',inspect)];
  const parts=Object.keys(entries).filter(p=>equipped(p));
  if(!parts.length){const p=document.createElement('p');p.textContent='Equip a part to add it to your build.';rows.push(p);}
  for(const p of parts){
   const b=button('',()=>{dismiss();choosePart(p);});b.className='buildItem';
-  const h=document.createElement('small');h.textContent=p.toUpperCase();const span=document.createElement('span');span.textContent=equipped(p).name;b.append(h,span);rows.push(b);
+  const h=document.createElement('small');h.textContent=p.toUpperCase();const span=document.createElement('span');span.textContent=p==='Respray'&&state.customPaint?'Custom '+state.customPaint.finish+' · '+state.customPaint.hex:equipped(p).name+(p==='Rim Style'?' · Size '+state.rimSize:'');b.append(h,span);rows.push(b);
  }
- if(parts.length)rows.push(button('Reset build…',()=>modal('Reset build?',[button('Keep my build',myBuild),button('Restore factory build and funds',()=>{state.cash=funding;state.equipped={};state.owned={};save();dismiss();showBench();})])));
+ if(parts.length)rows.push(button('Reset build…',()=>modal('Reset build?',[button('Keep my build',myBuild),button('Restore factory build and funds',()=>{state.cash=funding;state.equipped={};state.owned={};state.rimSize=7;state.customPaint=null;save();dismiss();showBench();})])));
  modal('My build',rows);
 }
 function menu(){
@@ -169,11 +210,29 @@ function menu(){
  sel.onchange=()=>{state.quality=sel.value;save();if(mode==='video'){const t=segmentStart+video.currentTime;playAt(t,transientEnd);}};
  const quality=document.createElement('label');quality.append('Video quality',sel);
  const link=button('Play Lucia & Jason',()=>{dismiss();stopVideo();modeIs('mission');$('mission').hidden=false;const frame=$('mission').querySelector('iframe');frame.onload=()=>{try{frame.contentWindow.startExperience?.();}catch{}};frame.src='../gamerlito-lucia-jason-manual/';});
- const rows=[button('Resume',()=>{dismiss();if(mode==='video')video.play().catch(()=>{});}),button('Workshop',()=>{dismiss();showBench();}),button('My build',myBuild),button('Play full recording',()=>{dismiss();returnMode='bench';playAt(0);}),link,quality];
+ const rows=[button('Resume',()=>{dismiss();if(mode==='video')video.play().catch(()=>{});}),button('Workshop',()=>{dismiss();showBench();}),button('My build',myBuild),button('Play full recording',()=>{dismiss();testDrive=false;returnMode='bench';playAt(0);}),link,quality];
  if(document.fullscreenEnabled||document.documentElement.webkitRequestFullscreen)rows.push(button('Full screen',()=>{if(document.fullscreenElement)document.exitFullscreen();else (document.documentElement.requestFullscreen?.()||document.documentElement.webkitRequestFullscreen?.())?.catch?.(()=>{});}));
  rows.push(button('Leave experience',()=>{dismiss();stopVideo();mode='lobby';$('shop').hidden=true;window.Launcher.show('details');}));
  modal('Experience menu',rows);
 }
+const pedals=$('pedals');let pedal='';
+function throttle(action){
+ if(!testDrive||mode!=='video')return;
+ pedal=action;
+ const engine=state.equipped['Full Engine'],induction=state.equipped.Induction,trans=state.equipped.Transmission;
+ const max=1.18+(engine===605?.28:engine===603?.15:0)+(induction===612?.20:induction===609?.12:0)+(trans===617?.09:0);
+ const boost=action==='boost'&&state.equipped.Boost===620;
+ for(const b of pedals.querySelectorAll('button'))b.setAttribute('aria-pressed',String(b.dataset.pedal===action));
+ if(action==='brake'){video.playbackRate=.45;return;}
+ video.playbackRate=boost?max+.43:action==='gas'?max:1;
+ if(action&&!video.error)video.play().catch(()=>{});
+}
+for(const b of pedals.querySelectorAll('button')){
+ b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);throttle(b.dataset.pedal);};
+ b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>throttle('');
+}
+window.addEventListener('blur',()=>{if(pedal)throttle('');});
+window.addEventListener('keyup',e=>{if(pedal&&['KeyW','KeyS','ArrowUp','ArrowDown','ShiftLeft','ShiftRight'].includes(e.code))throttle('');});
 function stamp(n){n=Math.max(0,Math.floor(n));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
 function returnToShop(){if(returnMode==='option'){stopVideo();modeIs('option');renderOption();}else showBench();}
 $('exitMission').onclick=()=>{const frame=$('mission').querySelector('iframe');frame.onload=null;frame.src='about:blank';$('mission').hidden=true;showBench();};
@@ -217,7 +276,7 @@ function playAt(time,end=null){
  time=Math.max(0,Math.min(total-.15,time));
  let i=segments.length-1;while(i>0&&segments[i].start>time)i--;currentSegment=i;segmentStart=segments[i].start;
  transientEnd=end;const token=++mediaToken;
- modeIs('video');$('seek').max=String(total);$('pause').textContent='Play';$('clock').value=stamp(time)+' / '+stamp(total);
+ modeIs('video');$('pedals').querySelector('[data-pedal=boost]').hidden=state.equipped.Boost!==620;video.playbackRate=1;$('seek').max=String(total);$('pause').textContent='Play';$('clock').value=stamp(time)+' / '+stamp(total);
  sceneToken++;canvas.hidden=true;
  const item=segments[i];let ready=false,timer;
  function load(kind){
@@ -263,7 +322,7 @@ function enter(){
 window.startExperience=enter;
 $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('apply').onclick=install;$('up').onclick=()=>showBench(true);
 $('menu').onclick=menu;$('build').onclick=()=>mode==='inspect'?showBench():myBuild();$('close').onclick=dismiss;
-$('drive').onclick=()=>{returnMode='bench';playAt(798);};
+$('drive').onclick=()=>{returnMode='bench';testDrive=true;playAt(798);};
 $('motion').onclick=()=>{returnMode='option';const last=Math.max(...entries[part].map(x=>x.t));playAt(option().t+.20,Math.max(option().t+1.6,last+1.2));};
 $('returnShop').onclick=returnToShop;$('skip').onclick=()=>{clearTimeout(introTimer);showBench();};
 $('pause').onclick=()=>{if(video.error){playAt(segmentStart+Number(video.currentTime||0),transientEnd);return;}if(video.paused)video.play().catch(()=>notify('Press Play to resume'));else video.pause();};
@@ -272,6 +331,8 @@ $('seek').onchange=e=>{returnMode='bench';playAt(Number(e.target.value));};
 document.addEventListener('keydown',e=>{
  if($('shop').hidden||$('panel').open||e.altKey||e.ctrlKey||e.metaKey||e.target.tagName==='INPUT')return;
  if(e.key==='Escape'){e.preventDefault();if(mode==='option')showBench(true);else if(mode==='video')returnToShop();else menu();return;}
+ if(mode==='video'&&testDrive&&['KeyW','KeyS','ArrowUp','ArrowDown','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();if(!e.repeat)throttle(['KeyW','ArrowUp'].includes(e.code)?'gas':e.code.startsWith('Shift')?'boost':'brake');return;}
+ if(mode==='inspect'&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();$('angle').click();return;}
  if(mode==='option'){
   if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();move(e.key==='ArrowRight'?1:-1);}
   if(e.key==='Enter'&&(!e.target.closest('button')||e.target.closest('#rail'))){e.preventDefault();install();}
