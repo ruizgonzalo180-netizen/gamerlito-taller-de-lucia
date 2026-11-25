@@ -204,7 +204,10 @@ function nativeOption(){
  area('Inspect options',74.5,92.3,12.3,7.7,choiceList);
  const installed=$('apply').disabled;
  const installButton=area(installed?'Equipped':$('apply').textContent,87.1,92,6.2,8,install,installed?'Equipped':'');
- if(installed)installButton.classList.add('ref-prompt');
+ if(installed){
+  installButton.classList.add('ref-prompt');
+  const tag=document.createElement('span');tag.className='ref-owned';tag.textContent='Owned';native.append(tag);
+ }
  area('Back',93,92,7,8,backNative);moneyOverlay();
 }
 native.addEventListener('wheel',e=>{if(mode==='bench'&&group==='Bodywork'&&!submenu){e.preventDefault();const n=e.deltaY>0?1:0;if(rowPage!==n){rowPage=n;showBench();}}},{passive:false});
@@ -253,9 +256,9 @@ $('rimSize').oninput=e=>{draftRim=Number(e.target.value);renderOption();};
 $('customPaint').onclick=()=>{draftPaint=draftPaint?null:{hex:$('pigment').value,finish:$('sheen').value};renderOption();};
 $('pigment').oninput=$('sheen').onchange=()=>{draftPaint={hex:$('pigment').value,finish:$('sheen').value};renderOption();};
 function install(){
- const it=option();if($('apply').disabled)return;
+ const it=option();if($('apply').disabled)return;const buying=!owned(it);
  if(!owned(it)){if(it.price>state.cash){notify('Insufficient garage funds');return;}state.cash-=it.price;(state.owned[part]??=[]).push(it.t);}
- if(part==='Rim Style')state.rimSize=draftRim;if(part==='Respray')state.customPaint=draftPaint;state.equipped[part]=it.t;renderOption();if(save())notify(it.name+' equipped');
+ if(part==='Rim Style')state.rimSize=draftRim;if(part==='Respray')state.customPaint=draftPaint;state.equipped[part]=it.t;renderOption();if(save())notify(buying?'Purchased ✓':'Equipped ✓');
 }
 function modal(title,children){
  $('heading').textContent=title;$('panelbody').replaceChildren(...children);
