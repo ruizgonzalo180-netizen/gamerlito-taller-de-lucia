@@ -1,0 +1,5 @@
+{
+  "id":"./", "start_url":"./", "scope":"./", "name":"Gamerlito · Lucia Driving",
+  "short_name":"Lucia Driving", "display":"fullscreen", "background_color":"#080909","theme_color":"#080909",
+  "icons":[{"src":"../gamerlito-192.png","sizes":"192x192","type":"image/png"},{"src":"../gamerlito-512.png","sizes":"512x512","type":"image/png"}]
+}
